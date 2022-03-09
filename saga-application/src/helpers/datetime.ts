@@ -18,7 +18,7 @@ export const toString = (date: Date, mask: string, fallbackValue: any) => {
   }
 }
 
-export const toNumber = (str: string, precision: number = 0, fallbackValue: any): number  => {
+export const toNumber = (str: string, precision: number = 0, fallbackValue?: any ): number  => {
   try {
     return parseFloat(parseFloat(str).toFixed(precision)) 
   } catch (ex) {
