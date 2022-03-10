@@ -11,4 +11,4 @@ export const useDispatchAction = () => {
   return useCallback(function<P, M, E>(action: PayloadAction<P, string> | PayloadAction<P, string, M, E>) {
     dispatch(action);
   }, [dispatch])
-} 
+}

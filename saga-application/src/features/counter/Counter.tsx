@@ -1,11 +1,17 @@
 import { useSelector } from 'react-redux'
-import { decrement, increment, selectCount, incrementByAmount } from './counter-slice';
+import { decrement, increment, selectCount, incrementByAmount, requestPosts } from './counter-slice';
 import { useDispatchAction } from '../../app/hook';
 import { toNumber } from '../../helpers/datetime';
+import { useEffect } from 'react';
 
 export default function Counter() {
   const count = useSelector(selectCount);
   const dispatchAction = useDispatchAction();
+
+  useEffect(() => {
+    dispatchAction(requestPosts(10))
+  }, [])
+
   return (
     <div>
       <div>

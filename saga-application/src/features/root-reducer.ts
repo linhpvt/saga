@@ -1,5 +1,5 @@
 import counterSlice from './counter/counter-slice';
-
-export default {
+const rootReducer = {
   counter: counterSlice
 }
+export default rootReducer;
