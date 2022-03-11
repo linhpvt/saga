@@ -11,6 +11,8 @@ const initialState: CounterState = {
   value: 0,
   result: []
 };
+const user = {name: "linhpv", age: 10, remark: ""}
+console.log('afdfdfdf')
 // http action
 const ReqPosts = `${HTTP_REQUEST}-Posts`;
 // feature

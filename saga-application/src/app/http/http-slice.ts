@@ -1,12 +1,16 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { AppStateType } from '../../app/store';
 
 export const Status = {
   IDLE: 'Idle',
   PENDING: 'Pending',
   SUCCESS: 'Success',
-  FAILURE: 'Failure'
+  FAILURE: 'Failure',
+  OK: 'Ok'
 }
+
+let user = {name:"a",age: 10}
+
 export interface HttpState {
   errorCode?: number,  // error code
   httpStatus?: number, // http status code

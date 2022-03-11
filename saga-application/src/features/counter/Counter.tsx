@@ -10,7 +10,7 @@ export default function Counter() {
 
   useEffect(() => {
     dispatchAction(requestPosts(10))
-  }, [])
+  }, [dispatchAction])
 
   return (
     <div>
