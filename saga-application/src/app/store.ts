@@ -1,19 +1,19 @@
 import { configureStore, applyMiddleware } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
 import rootReducer from '../features/root-reducer';
-import httpReducer from '../app/http/http-slice'
+import httpReducer from './http/http-slice';
 import { httpWatcherSaga } from './http/http-saga';
 // create the saga middleware
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
-  // @ts-ignore
-  reducer: { ...rootReducer, http: httpReducer },
-  // middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-  //   serializableCheck: false,
-  //   thunk: false
-  // }).concat(sagaMiddleware),
-  enhancers: [applyMiddleware(sagaMiddleware)]
+	// @ts-ignore
+	reducer: { ...rootReducer, http: httpReducer },
+	// middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+	//   serializableCheck: false,
+	//   thunk: false
+	// }).concat(sagaMiddleware),
+	enhancers: [applyMiddleware(sagaMiddleware)],
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
