@@ -74,7 +74,7 @@ export const { increment, decrement, incrementByAmount } = counterSlice.actions;
 // selectors
 export const selectCount = (state: AppStateType) => {
 	// @ts-ignore
-	const { counter: { value = 0 } = {} } = state;
+	const { counter: { value = 0 } = {} } = state || {};
 	return value;
 };
 

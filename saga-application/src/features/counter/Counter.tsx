@@ -12,10 +12,12 @@ import counterReducer, {
 import { useDispatchAction } from '../../app/hook';
 import { toNumber } from '../../helpers/datetime';
 
-import useInjectReducer from '../../hooks/useInjectReducer';
+// import useInjectReducer from '../../hooks/useInjectReducer';
+import useInjectReducer from '../../hooks/useInjectReducerByLayoutEffect';
 
 export default function Counter() {
 	useInjectReducer(COUNTERSLICE_KEY, counterReducer);
+
 	const count = useSelector(selectCount);
 	const dispatchAction = useDispatchAction();
 
