@@ -103,7 +103,6 @@ const doDelete = async (url: string, config: AxiosRequestConfig<any>, retries: n
 export function* httpWatcherSaga() {
 	// @ts-ignore
 	yield takeEvery((action: PayloadAction<any, string, Meta>) => {
-		console.log('Http watcher handles request !!!, ', action);
 		const { meta: { apiUrl } = {} } = action;
 		return apiUrl;
 	}, httpWorkerSaga);

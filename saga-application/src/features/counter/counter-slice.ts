@@ -72,7 +72,12 @@ export const getCommentsOfAPost = (postId: number) => {
 export const { increment, decrement, incrementByAmount } = counterSlice.actions;
 
 // selectors
-export const selectCount = (state: AppStateType) => state.counter.value;
+export const selectCount = (state: AppStateType) => {
+	// @ts-ignore
+	const { counter: { value = 0 } = {} } = state;
+	return value;
+};
 
 // reducer
 export default counterSlice.reducer;
+export const COUNTERSLICE_KEY = 'counter';

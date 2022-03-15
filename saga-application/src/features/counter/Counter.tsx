@@ -1,10 +1,21 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { decrement, increment, selectCount, incrementByAmount, requestPosts, getCommentsOfAPost } from './counter-slice';
+import counterReducer, {
+	COUNTERSLICE_KEY,
+	decrement,
+	increment,
+	selectCount,
+	incrementByAmount,
+	requestPosts,
+	getCommentsOfAPost,
+} from './counter-slice';
 import { useDispatchAction } from '../../app/hook';
 import { toNumber } from '../../helpers/datetime';
 
+import useInjectReducer from '../../hooks/useInjectReducer';
+
 export default function Counter() {
+	useInjectReducer(COUNTERSLICE_KEY, counterReducer);
 	const count = useSelector(selectCount);
 	const dispatchAction = useDispatchAction();
 
