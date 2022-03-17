@@ -46,10 +46,13 @@ const buildUrlWithQueries = (url: string, queryParams: any) => {
 	return `${url}?${queryString}`;
 };
 
-export interface PromiseRequest {
-	successActionType?: string;
-	promise: [string, ...any[]];
-}
+export type RequestInfo = {
+	httpVerb: string; // POST | PUT | GET | DELETE
+	apiUrl: string; // api url: /posts/{accountId} | /posts
+	urlParam?: object; // { [key]: string | number | boolean }
+	queryParam?: object; // { [key]: string | number | boolean }
+	payload?: object; // payload of POST | PUT
+};
 
 export interface Meta {
 	apiUrl?: string; // api url: /posts/{accountId} | /posts
@@ -58,7 +61,7 @@ export interface Meta {
 	method?: string; // post | put | get | delete
 	retries?: number; // number of retries until the request
 	spinner?: boolean; // show spinner indicator or not, default true
-	promiseRequests?: PromiseRequest[]; // promise list to be executed just like Promise.all([...])
+	requestInfos?: RequestInfo[]; // contain promises to be executed just like Promise.all([...])
 	id?: string | number; // record ID of PUT or DELETE
 }
 
@@ -75,14 +78,14 @@ const buildResponse = (result: any, code: number = SUCCESS_CODE): ApiResponse =>
 		result,
 	} as ApiResponse;
 };
-export const doGet = async (url: string, config: AxiosRequestConfig, retries: number = 0): Promise<ApiResponse> => {
+export const doGet = async (url: string, payload: any, config: AxiosRequestConfig, retries: number = 0): Promise<ApiResponse> => {
 	try {
 		const { data } = await axios.get(url, config);
 		return buildResponse(data);
 	} catch (ex) {
 		if (retries < MAX_RETRIES) {
 			await delay(DELAY_TIME);
-			return doGet(url, config, retries + 1);
+			return doGet(url, payload, config, retries + 1);
 		}
 		return buildResponse(ex, EXCEPTION_CODE);
 	}
@@ -113,14 +116,14 @@ export const doPut = async (url: string, payload: any, config: AxiosRequestConfi
 	}
 };
 
-export const doDelete = async (url: string, config: AxiosRequestConfig<any>, retries: number = 0): Promise<ApiResponse> => {
+export const doDelete = async (url: string, payload: any, config: AxiosRequestConfig<any>, retries: number = 0): Promise<ApiResponse> => {
 	try {
 		const { data } = await axios.delete(url, config);
 		return buildResponse(data);
 	} catch (ex) {
 		if (retries < MAX_RETRIES) {
 			await delay(DELAY_TIME);
-			return doDelete(url, config, retries + 1);
+			return doDelete(url, payload, config, retries + 1);
 		}
 		return buildResponse(ex, EXCEPTION_CODE);
 	}
@@ -148,7 +151,7 @@ export function* httpWatcherSaga() {
 }
 
 export function* httpWorkerSaga(action: { payload: any; type: string; meta: Meta }) {
-	const { type, payload, meta: { id, method, queryParam, urlParam, apiUrl = '', spinner = true, promiseRequests = [] } = {} } = action;
+	const { type, payload, meta: { method, queryParam, urlParam, apiUrl = '', spinner = true, requestInfos = [] } = {} } = action;
 	let realApiUrl = urlParam ? buildUrlWithParams(apiUrl, urlParam) : apiUrl;
 	realApiUrl = queryParam ? buildUrlWithQueries(realApiUrl, queryParam) : realApiUrl;
 
@@ -168,44 +171,51 @@ export function* httpWorkerSaga(action: { payload: any; type: string; meta: Meta
 				resp = yield call(doPost, realApiUrl, payload, config);
 				break;
 			case Method.GET:
-				resp = yield call(doGet, realApiUrl, config);
+				resp = yield call(doGet, realApiUrl, undefined, config);
 				break;
 			case Method.PUT:
-				resp = yield call(doPut, `${realApiUrl}/${id}`, payload, config);
+				resp = yield call(doPut, `${realApiUrl}`, payload, config);
 				break;
 			case Method.DELETE:
-				resp = yield call(doDelete, `${realApiUrl}/${id}`, config);
+				resp = yield call(doDelete, `${realApiUrl}`, undefined, config);
 				break;
-			case Method.CONCURRENT:
+			case Method.CONCURRENT: {
 				resps = yield all(
-					promiseRequests.map((p: PromiseRequest) => {
-						const [verb, ...args] = p.promise;
+					requestInfos.map((ri: RequestInfo) => {
+						const { httpVerb: verb, apiUrl: url, payload: pl, queryParam: qp, urlParam: up } = ri;
+						let actualUrl = up ? buildUrlWithParams(url, up) : url;
+						actualUrl = qp ? buildUrlWithQueries(actualUrl, qp) : actualUrl;
 						// @ts-ignore
-						return call(ApisMap[verb], ...args.concat(config));
+						return call(ApisMap[verb], actualUrl, pl, config);
 					}),
 				);
 				break;
+			}
+
 			default:
 				break;
 		}
 		// convert the response of single call into array
 		resps = method === Method.CONCURRENT ? resps : [resp];
+		const errResults = resps.filter((res: ApiResponse) => res.code !== SUCCESS_CODE);
+		const code = errResults.map((r: ApiResponse) => r.code)[0] || 0;
 
-		// the order of picking the action type of concurrent calls is action type of each promise then the action type of the action that triggered the saga
-		const actionTypes: string[] = method === Method.CONCURRENT ? promiseRequests.map((p: PromiseRequest) => p.successActionType || type) : [type];
+		// stop spinner
+		if (spinner) {
+			yield put(code === SUCCESS_CODE ? success() : failure(buildFailure(errResults[0].result, type)));
+		}
 
-		// update store for each successful response accordingly
-		let httpDone = false;
-		for (let index = 0; index < resps.length; index += 1) {
-			const { code, result } = resps[index];
-			if (spinner && !httpDone) {
-				yield put(code === SUCCESS_CODE ? success() : failure(buildFailure(result, actionTypes[index])));
-				httpDone = true;
-			}
-
-			if (code === SUCCESS_CODE) {
-				yield put({ type: `${actionTypes[index]}-${Status.SUCCESS}`, payload: { result } });
-			}
+		// update store
+		if (code === SUCCESS_CODE) {
+			yield put({
+				type: `${type}-${Status.SUCCESS}`,
+				payload: {
+					result:
+						method === Method.CONCURRENT
+							? resps.filter((r: ApiResponse) => r.code === SUCCESS_CODE).map((r: ApiResponse) => r.result)
+							: resps[0].result,
+				},
+			});
 		}
 	} catch (ex: any) {
 		if (spinner) {

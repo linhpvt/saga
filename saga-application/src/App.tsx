@@ -2,7 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.scss';
 import { toString, FORMAT } from './helpers/datetime';
-import Counter from './features/counter/Counter';
+import Counter from './features/counter/Post';
 
 function App() {
 	return (
