@@ -1,14 +1,14 @@
 {
-  "prettier.useEditorConfig": false,
-  "prettier.useTabs": true,
-  "prettier.trailingComma": "all",
-  "prettier.singleQuote": true,
-  "prettier.resolveGlobalModules": true,
-  "prettier.printWidth": 150,
-  "prettier.jsxSingleQuote": true,
-  "prettier.jsxBracketSameLine": true,
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": false,
-  "editor.tabSize": 2,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+	"prettier.useEditorConfig": false,
+	"prettier.useTabs": true,
+	"prettier.trailingComma": "all",
+	"prettier.singleQuote": true,
+	"prettier.resolveGlobalModules": true,
+	"prettier.printWidth": 100,
+	"prettier.jsxSingleQuote": true,
+	"prettier.jsxBracketSameLine": true,
+	"editor.formatOnSave": true,
+	"editor.formatOnPaste": false,
+	"editor.tabSize": 2,
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
 }

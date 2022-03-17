@@ -2,7 +2,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import { Method } from 'app/global';
 import { Meta } from './http-saga-by-verbs';
 
-export const createPostAction = (type: string, payload: any, meta: Meta): PayloadAction<any, string, Meta> => {
+export function createPostAction<P>(type: string, payload: P, meta: Meta): PayloadAction<P, string, Meta> {
 	const httpAction: PayloadAction<any, string, Meta> = {
 		type,
 		payload,
@@ -12,9 +12,9 @@ export const createPostAction = (type: string, payload: any, meta: Meta): Payloa
 		},
 	};
 	return httpAction;
-};
+}
 
-export const createPutAction = (type: string, id: string | number, payload: any, meta: Meta): PayloadAction<any, string, Meta> => {
+export function createPutAction<P>(type: string, id: string | number, payload: P, meta: Meta): PayloadAction<P, string, Meta> {
 	const httpAction: PayloadAction<any, string, Meta> = {
 		type,
 		payload,
@@ -25,9 +25,9 @@ export const createPutAction = (type: string, id: string | number, payload: any,
 		},
 	};
 	return httpAction;
-};
+}
 
-export const createGetAction = (type: string, meta: Meta): PayloadAction<any, string, Meta> => {
+export function createGetAction<P>(type: string, meta: Meta): PayloadAction<P, string, Meta> {
 	return {
 		type,
 		meta: {
@@ -35,9 +35,9 @@ export const createGetAction = (type: string, meta: Meta): PayloadAction<any, st
 			method: Method.GET,
 		},
 	} as PayloadAction<any, string, Meta>;
-};
+}
 
-export const createDeleteAction = (type: string, meta: Meta): PayloadAction<any, string, Meta> => {
+export function createDeleteAction<P>(type: string, meta: Meta): PayloadAction<P, string, Meta> {
 	return {
 		type,
 		meta: {
@@ -45,4 +45,4 @@ export const createDeleteAction = (type: string, meta: Meta): PayloadAction<any,
 			method: Method.GET,
 		},
 	} as PayloadAction<any, string, Meta>;
-};
+}

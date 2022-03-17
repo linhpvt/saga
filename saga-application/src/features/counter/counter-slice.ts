@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Status } from '../../app/http/http-slice';
 import { AppStateType } from '../../app/store';
-import { Meta } from '../../app/http/http-saga';
+import { Meta, HttpVerbs } from '../../app/http/http-saga';
 import { HTTP_REQUEST, Method } from '../../app/global';
 
 export interface CounterState {
@@ -17,6 +17,7 @@ const initialState: CounterState = {
 // http action
 const ReqPosts = `${HTTP_REQUEST}-Posts`;
 const ReqCommentsOfPost = `${HTTP_REQUEST}-CommentsOfPost`;
+const ReqPostAndComments = `${HTTP_REQUEST}-PostAndComment`;
 // feature
 const FEATURE = 'counter';
 // api url
@@ -70,6 +71,19 @@ export const getCommentsOfAPost = (postId: number) => {
 	return { type: `${FEATURE}/${ReqCommentsOfPost}`, payload: undefined, meta };
 };
 export const { increment, decrement, incrementByAmount } = counterSlice.actions;
+
+export const callMultipleApis = (postId: number | string, refPostId: number | string) => {
+	const meta: Meta = {
+		method: Method.CONCURRENT,
+		// @ts-ignore
+		promiseRequests: [
+			{ successActionType: `${FEATURE}/${ReqPosts}`, promise: [HttpVerbs.GET, `/posts/${postId}`] },
+			{ successActionType: `${FEATURE}/${ReqCommentsOfPost}`, promise: [HttpVerbs.GET, `/comments?postId=${refPostId}`] },
+		],
+	};
+	return { type: `${FEATURE}/${ReqPostAndComments}`, payload: undefined, meta };
+	// doGet, actualUrlApi, config
+};
 
 // selectors
 export const selectCount = (state: AppStateType) => {

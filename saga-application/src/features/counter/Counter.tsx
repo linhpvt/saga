@@ -8,6 +8,7 @@ import counterReducer, {
 	incrementByAmount,
 	requestPosts,
 	getCommentsOfAPost,
+	callMultipleApis,
 } from './counter-slice';
 import { useDispatchAction } from '../../app/hook';
 import { toNumber } from '../../helpers/datetime';
@@ -22,8 +23,14 @@ export default function Counter() {
 	const dispatchAction = useDispatchAction();
 
 	useEffect(() => {
-		dispatchAction(requestPosts(10));
-		dispatchAction(getCommentsOfAPost(1));
+		// single API call
+		// dispatchAction(getCommentsOfAPost(1));
+
+		// single API call
+		// dispatchAction(requestPosts(10));
+
+		// concurrent API calls
+		dispatchAction(callMultipleApis(10, 1));
 	}, [dispatchAction]);
 
 	return (
