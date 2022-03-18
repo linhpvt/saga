@@ -7,8 +7,8 @@ const Emitter = (() => {
 	/* sample handers structure
   {
     click: HandlerFunc[],
-    httpSuccess: HandlerFunc[],
-    httpFailure: HandlerFunc[],
+    http-success: HandlerFunc[],
+    http-failure: HandlerFunc[],
   }
   */
 	const handlers: any = {};
@@ -16,7 +16,6 @@ const Emitter = (() => {
 	// publish data for handlers interesting with given `eventName`
 	const publish = (eventName: string, data: any) => {
 		(handlers[eventName] || []).forEach((handler: HandlerFunc) => handler(data));
-		setInterval(() => console.log(handlers), 10 * 1000);
 	};
 
 	// subscribe to listen data for a given `eventName`
