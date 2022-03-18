@@ -85,7 +85,12 @@ const buildResponse = (result: any, code: number = SUCCESS_CODE): ApiResponse =>
 		result,
 	} as ApiResponse;
 };
-export const doGet = async (url: string, payload: any, config: AxiosRequestConfig, retries: number = 0): Promise<ApiResponse> => {
+export const doGet = async (
+	url: string,
+	payload: any,
+	config: AxiosRequestConfig,
+	retries: number = 0,
+): Promise<ApiResponse> => {
 	try {
 		const { data } = await axios.get(url, config);
 		return buildResponse(data);
@@ -97,7 +102,12 @@ export const doGet = async (url: string, payload: any, config: AxiosRequestConfi
 		return buildResponse(ex, EXCEPTION_CODE);
 	}
 };
-export const doPost = async (url: string, payload: any, config: AxiosRequestConfig<any>, retries: number = 0): Promise<ApiResponse> => {
+export const doPost = async (
+	url: string,
+	payload: any,
+	config: AxiosRequestConfig<any>,
+	retries: number = 0,
+): Promise<ApiResponse> => {
 	try {
 		const { data } = await axios.post(url, payload, config);
 		return buildResponse(data);
@@ -110,7 +120,12 @@ export const doPost = async (url: string, payload: any, config: AxiosRequestConf
 	}
 };
 
-export const doPut = async (url: string, payload: any, config: AxiosRequestConfig<any>, retries: number = 0): Promise<ApiResponse> => {
+export const doPut = async (
+	url: string,
+	payload: any,
+	config: AxiosRequestConfig<any>,
+	retries: number = 0,
+): Promise<ApiResponse> => {
 	try {
 		const { data } = await axios.put(url, payload, config);
 		return buildResponse(data);
@@ -123,7 +138,12 @@ export const doPut = async (url: string, payload: any, config: AxiosRequestConfi
 	}
 };
 
-export const doDelete = async (url: string, payload: any, config: AxiosRequestConfig<any>, retries: number = 0): Promise<ApiResponse> => {
+export const doDelete = async (
+	url: string,
+	payload: any,
+	config: AxiosRequestConfig<any>,
+	retries: number = 0,
+): Promise<ApiResponse> => {
 	try {
 		const { data } = await axios.delete(url, config);
 		return buildResponse(data);
@@ -158,7 +178,11 @@ export function* httpWatcherSaga() {
 }
 
 export function* httpWorkerSaga(action: { payload: any; type: string; meta: Meta }) {
-	const { type, payload, meta: { method, queryParam, urlParam, apiUrl = '', spinner = true, requestInfos = [] } = {} } = action;
+	const {
+		type,
+		payload,
+		meta: { method, queryParam, urlParam, apiUrl = '', spinner = true, requestInfos = [] } = {},
+	} = action;
 	let realApiUrl = urlParam ? buildUrlWithParams(apiUrl, urlParam) : apiUrl;
 	realApiUrl = queryParam ? buildUrlWithQueries(realApiUrl, queryParam) : realApiUrl;
 
@@ -208,7 +232,9 @@ export function* httpWorkerSaga(action: { payload: any; type: string; meta: Meta
 
 		// stop spinner
 		if (spinner) {
-			yield put(code === SUCCESS_CODE ? success() : failure(buildFailure(errResults[0].result, type)));
+			yield put(
+				code === SUCCESS_CODE ? success() : failure(buildFailure(errResults[0].result, type)),
+			);
 		}
 
 		// update store
@@ -252,11 +278,15 @@ const buildFailure = (ex: any, type: string) => {
 // build failed data object for emitter
 const buildFailureData = (method: string | undefined, resps: ApiResponse[], type: string) => {
 	return method === Method.CONCURRENT
-		? resps.filter((r: ApiResponse) => r.code === EXCEPTION_CODE).map((r: ApiResponse) => buildFailure(r.result, type))
+		? resps
+				.filter((r: ApiResponse) => r.code === EXCEPTION_CODE)
+				.map((r: ApiResponse) => buildFailure(r.result, type))
 		: buildFailure(resps[0].result, type);
 };
 
 // build success data object for emitter
 const buildSuccessData = (method: string | undefined, resps: ApiResponse[]) => {
-	return method === Method.CONCURRENT ? resps.filter((r: ApiResponse) => r.code === SUCCESS_CODE).map((r: ApiResponse) => r.result) : resps[0].result;
+	return method === Method.CONCURRENT
+		? resps.filter((r: ApiResponse) => r.code === SUCCESS_CODE).map((r: ApiResponse) => r.result)
+		: resps[0].result;
 };
