@@ -11,7 +11,9 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import axios, { AxiosRequestConfig } from 'axios';
 import { failure, HttpState, pending, Status, success } from './http-slice';
 import { Method, API_BASE_URL, MAX_RETRIES } from '../global';
+import Emitter, { ApiEvents } from '../../common/emitter';
 
+// time to delay for each retried call in millisecond
 const DELAY_TIME = 50;
 const delay = (milliseconds: number) =>
 	new Promise((resolve: any) => {
@@ -31,6 +33,7 @@ const buildAxiosConfig = (): AxiosRequestConfig => {
 	return cfg;
 };
 
+// build actual params for url, the placeholder must be in `{property}` format like {postId}
 const buildUrlWithParams = (url: string, urlParams: any) => {
 	const keys = Object.keys(urlParams);
 	let actualUrl: string = url;
@@ -39,13 +42,13 @@ const buildUrlWithParams = (url: string, urlParams: any) => {
 	});
 	return actualUrl;
 };
-
+// queryParams: build the query string ro url, the placeholder must be in `{key: value}`
 const buildUrlWithQueries = (url: string, queryParams: any) => {
 	const keys = Object.keys(queryParams);
 	const queryString = keys.map((key: string) => `${key}=${queryParams[key]}`).join('&');
 	return `${url}?${queryString}`;
 };
-
+// Data type of concurrent  api call
 export type RequestInfo = {
 	httpVerb: string; // POST | PUT | GET | DELETE
 	apiUrl: string; // api url: /posts/{accountId} | /posts
@@ -54,6 +57,7 @@ export type RequestInfo = {
 	payload?: object; // payload of POST | PUT
 };
 
+// the generic data structure for action.meta
 export interface Meta {
 	apiUrl?: string; // api url: /posts/{accountId} | /posts
 	urlParam?: object; // { [key]: string | number | boolean }
@@ -64,14 +68,17 @@ export interface Meta {
 	requestInfos?: RequestInfo[]; // contain promises to be executed just like Promise.all([...])
 	id?: string | number; // record ID of PUT or DELETE
 }
-
+// control any exception
 const EXCEPTION_CODE = -100;
+// control success api call
 const SUCCESS_CODE = 0;
+
+// generic API response data
 export interface ApiResponse {
 	code: number;
 	result: any;
 }
-
+// build response data structure
 const buildResponse = (result: any, code: number = SUCCESS_CODE): ApiResponse => {
 	return {
 		code,
@@ -191,7 +198,6 @@ export function* httpWorkerSaga(action: { payload: any; type: string; meta: Meta
 				);
 				break;
 			}
-
 			default:
 				break;
 		}
@@ -207,23 +213,30 @@ export function* httpWorkerSaga(action: { payload: any; type: string; meta: Meta
 
 		// update store
 		if (code === SUCCESS_CODE) {
+			const successData = buildSuccessData(method, resps);
 			yield put({
 				type: `${type}-${Status.SUCCESS}`,
-				payload: {
-					result:
-						method === Method.CONCURRENT
-							? resps.filter((r: ApiResponse) => r.code === SUCCESS_CODE).map((r: ApiResponse) => r.result)
-							: resps[0].result,
-				},
+				payload: successData,
+			});
+			// success event
+			Emitter.publish(ApiEvents.SUCCESS, { data: successData, action });
+		} else {
+			// failure event
+			Emitter.publish(ApiEvents.FAILURE, {
+				action,
+				data: buildFailureData(method, resps, type),
 			});
 		}
 	} catch (ex: any) {
+		const plFailure = buildFailure(ex, type);
 		if (spinner) {
-			yield put(failure(buildFailure(ex, type)));
+			yield put(failure(plFailure));
 		}
+		Emitter.publish(ApiEvents.FAILURE, { data: plFailure, action });
 	}
 }
 
+// build a single failed object
 const buildFailure = (ex: any, type: string) => {
 	const { message = '', response: { status = 500, statusText = '' } = {} } = ex;
 	const failureAction: HttpState = {
@@ -234,4 +247,16 @@ const buildFailure = (ex: any, type: string) => {
 		message,
 	};
 	return failureAction;
+};
+
+// build failed data object for emitter
+const buildFailureData = (method: string | undefined, resps: ApiResponse[], type: string) => {
+	return method === Method.CONCURRENT
+		? resps.filter((r: ApiResponse) => r.code === EXCEPTION_CODE).map((r: ApiResponse) => buildFailure(r.result, type))
+		: buildFailure(resps[0].result, type);
+};
+
+// build success data object for emitter
+const buildSuccessData = (method: string | undefined, resps: ApiResponse[]) => {
+	return method === Method.CONCURRENT ? resps.filter((r: ApiResponse) => r.code === SUCCESS_CODE).map((r: ApiResponse) => r.result) : resps[0].result;
 };

@@ -3,6 +3,7 @@ import { Status } from '../../app/http/http-slice';
 import { AppStateType } from '../../app/store';
 import { Meta, HttpVerbs } from '../../app/http/http-saga';
 import { HTTP_REQUEST, Method } from '../../app/global';
+import { createGetAction } from '../../app/http/http-actions';
 
 export interface PostState {
 	value: number;
@@ -23,7 +24,7 @@ const ReqPosts = `${HTTP_REQUEST}-Posts`;
 const ReqCommentsOfPost = `${HTTP_REQUEST}-CommentsOfPost`;
 const ReqPostAndComments = `${HTTP_REQUEST}-PostAndComment`;
 // feature
-export const POST_FEATURE = 'post';
+export const POST_FEATURE = 'postFeature';
 // api url
 const POSTS_API = '/posts';
 const GET_ONE_POST = '/posts/{id}';
@@ -49,34 +50,34 @@ export const counterSlice = createSlice({
 			return { ...state, value: value + payload };
 		},
 		[`${ReqPosts}-${Status.SUCCESS}`]: (state, action: PayloadAction<any>) => {
-			const { payload: { result } = {} } = action;
-			return { ...state, posts: result };
+			const { payload } = action;
+			return { ...state, post: payload };
 		},
 		[`${ReqCommentsOfPost}-${Status.SUCCESS}`]: (state, action: PayloadAction<any>) => {
-			const { payload: { result } = {} } = action;
-			return { ...state, commentsOfPosts: result };
+			const { payload } = action;
+			return { ...state, commentsOfPosts: payload };
 		},
 		[`${ReqPostAndComments}-${Status.SUCCESS}`]: (state, action: PayloadAction<any>) => {
-			const { payload: { result: [post, commentsByPostId] = {} } = {} } = action;
+			const { payload: [post, commentsByPostId] = [] } = action;
 			return { ...state, post, commentsByPostId };
 		},
 	},
 });
 
 // action creators are generated for each case reducer function
-export const requestPosts = (id?: number) => {
+export const getPostById = (id?: number) => {
 	const meta: Meta = {
-		method: Method.GET,
 		apiUrl: id ? GET_ONE_POST : POSTS_API,
 		urlParam: { id },
-		// spinner: false
 	};
-	return { type: `${POST_FEATURE}/${ReqPosts}`, payload: undefined, meta };
+	// @ts-ignore
+	return createGetAction<any>(`${POST_FEATURE}/${ReqPosts}`, meta);
 };
 
 export const getCommentsOfAPost = (postId: number) => {
-	const meta: Meta = { method: Method.GET, apiUrl: GET_COMMENTS_BY_POST, queryParam: { postId } };
-	return { type: `${POST_FEATURE}/${ReqCommentsOfPost}`, payload: undefined, meta };
+	const meta: Meta = { apiUrl: GET_COMMENTS_BY_POST, queryParam: { postId } };
+	// @ts-ignore
+	return createGetAction<any>(`${POST_FEATURE}/${ReqCommentsOfPost}`, meta);
 };
 export const { increment, decrement, incrementByAmount } = counterSlice.actions;
 
@@ -99,7 +100,7 @@ export const callMultipleApis = (postId: number | string, refPostId: number | st
 // selectors
 export const selectCount = (state: AppStateType) => {
 	// @ts-ignore
-	const { counter: { value = 0 } = {} } = state || {};
+	const { post: { value = 0 } = {} } = state || {};
 	return value;
 };
 

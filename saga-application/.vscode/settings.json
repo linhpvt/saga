@@ -4,7 +4,7 @@
 	"prettier.trailingComma": "all",
 	"prettier.singleQuote": true,
 	"prettier.resolveGlobalModules": true,
-	"prettier.printWidth": 100,
+	"prettier.printWidth": 80,
 	"prettier.jsxSingleQuote": true,
 	"prettier.jsxBracketSameLine": true,
 	"editor.formatOnSave": true,

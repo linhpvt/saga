@@ -1,5 +1,5 @@
 import { PayloadAction } from '@reduxjs/toolkit';
-import { Method } from 'app/global';
+import { Method } from '../global';
 import { Meta } from './http-saga-by-verbs';
 
 export function createPostAction<P>(type: string, payload: P, meta: Meta): PayloadAction<P, string, Meta> {

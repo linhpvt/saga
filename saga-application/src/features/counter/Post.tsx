@@ -6,7 +6,7 @@ import postReducer, {
 	increment,
 	selectCount,
 	incrementByAmount,
-	requestPosts,
+	getPostById,
 	getCommentsOfAPost,
 	callMultipleApis,
 } from './post-slice';
@@ -15,6 +15,7 @@ import { toNumber } from '../../helpers/datetime';
 
 // import useInjectReducer from '../../hooks/useInjectReducer';
 import useInjectReducer from '../../hooks/useInjectReducerByLayoutEffect';
+import Emitter, { ApiEvents } from '../../common/emitter';
 
 export default function Counter() {
 	useInjectReducer(POST_FEATURE, postReducer);
@@ -27,11 +28,27 @@ export default function Counter() {
 		// dispatchAction(getCommentsOfAPost(1));
 
 		// single API call
-		dispatchAction(requestPosts(10));
+		// dispatchAction(getPostById(10));
 
 		// concurrent API calls
-		// dispatchAction(callMultipleApis(10, 1));
+		dispatchAction(callMultipleApis(10, 1));
 	}, [dispatchAction]);
+
+	useEffect(() => {
+		const listener = (data: any) => {
+			console.log(data);
+		};
+
+		Emitter.subscribe(ApiEvents.SUCCESS, listener);
+
+		const unsubscribe = Emitter.subscribe(ApiEvents.FAILURE, listener);
+		Emitter.subscribe(ApiEvents.FAILURE, listener);
+		Emitter.subscribe(ApiEvents.FAILURE, listener);
+		Emitter.subscribe(ApiEvents.FAILURE, listener);
+		setTimeout(unsubscribe, 3000);
+
+		return unsubscribe;
+	}, []);
 
 	return (
 		<div>
